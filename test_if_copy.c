@@ -19,7 +19,8 @@ int main(int argc, char **argv) {
 
 	unsigned char file1Input, file2Input;
 
-	while(fread(&file1Input, sizeof(file1Input), 1, fp1) == fread(&file2Input, sizeof(file2Input), 1, fp2)) {
+	while((1 == fread(&file1Input, sizeof(file1Input), 1, fp1)) && (1 == fread(&file2Input, sizeof(file2Input), 1, fp2))) {
+
 		if(file1Input != file2Input) {
 			printf("Test Failed - %s is not a copy of %s\n", argv[1], argv[2]);
 			exit(1);

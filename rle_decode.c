@@ -32,11 +32,13 @@ int main(int argc, char **argv) {
 	assert(fpIn != NULL);
 	assert(fpOut != NULL);
 
-	char counter = 0;
-	char current = 0;
+	unsigned char current = 0;
+	unsigned int counter = 0;
 
-	while(fread(&counter, sizeof(current), 1, fpIn)) {
+	while(fread(&counter, sizeof(counter), 1, fpIn)) {
+		
 		fread(&current, sizeof(current), 1, fpIn);
+
 		for(int i = 0; i <= counter; i++)
 			fwrite(&current, sizeof(current), 1, fpOut);
 	}

@@ -3,18 +3,20 @@
 make clean
 make
 
-cp golfcore.ppm copy_of_golfcore.ppm
+cp $1 copy 
 
-time ./rleEncode copy_of_golfcore.ppm
-time ./rleDecode copy_of_golfcore.ppm.rle
+time ./rleEncode copy
+time ./rleDecode copy.rle
 
-./isCopy copy_of_golfcore.ppm golfcore.ppm
+./isCopy $1 copy
 
-rm copy_of_golfcore.ppm
+rm copy*
 
-cp golfcore.ppm copy_of_golfcore.ppm
+cp $1 copy
 
-time ./lzwEncode copy_of_golfcore.ppm
-time ./lzwDecode copy_of_golfcore.ppm.lzw
+time ./lzwEncode copy
+time ./lzwDecode copy.lzw
 
-./isCopy copy_of_golfcore.ppm golfcore.ppm
+./isCopy $1 copy
+
+rm copy*

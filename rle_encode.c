@@ -23,23 +23,27 @@ int main(int argc, char **argv) {
 	unsigned char current = 0;
 	unsigned char previous = 0;
 
-	unsigned char counter = 0;
+	unsigned int counter = 0;
 
 	fread(&previous, sizeof(previous), 1, fpIn);
 
-	while(fread(&current, sizeof(current), 1, fpIn)) {
+	while(1 == fread(&current, sizeof(current), 1, fpIn)) {
 
-			if(current == previous) {
-				counter++;
-			}
-			else {
-			  fwrite(&counter, sizeof(counter), 1, fpOut);
-			  fwrite(&previous, sizeof(previous), 1, fpOut);
-				counter = 0;
-			}
+		if(current == previous) {
+			counter++;
+			if(counter == 4294967295) printf("Hit Limit");
+		}
+		else {
+		  fwrite(&counter, sizeof(counter), 1, fpOut);
+		  fwrite(&previous, sizeof(previous), 1, fpOut);
+			counter = 0;
+		}
 
-			previous = current;
+		previous = current;
 	}
+
+	fwrite(&counter, sizeof(counter), 1, fpOut);
+	fwrite(&current, sizeof(current), 1, fpOut);
 
 	fclose(fpIn);
 	fclose(fpOut);
