@@ -2,36 +2,33 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <unistd.h>
 
 #define MAX_STRING_LENGTH 256
+#define VAL_TYPE int
 
 typedef struct entry_tag {
 	unsigned char *seq;
-	int val;
+	VAL_TYPE val;
 	struct entry_tag *fwd;
 } entry;
 
 entry *head = NULL;
 entry *tail = NULL;
 
-/*
-	-1 = Not Found
-	# = Position in Table
-*/
-int lookup_entry(unsigned char *seq) {
+// -1 = Not Found
+VAL_TYPE lookup_entry(unsigned char *seq, int strLen) {
 
 	if(head == NULL) return -1;
 
 	entry *rover = head;
 
 	do {
-		printf("%d: %s\n", rover->val, rover->seq);
-		
+		if(memcmp(rover->seq, seq, strLen) == 0) return rover->val;
 		if(rover->fwd != NULL) rover = rover->fwd;
-
 	} while(rover->fwd != NULL);
 
-	return rover->val;
+	return -1;
 }
 
 void add_entry(unsigned char *seq) {
@@ -56,11 +53,6 @@ void add_entry(unsigned char *seq) {
 
 }
 
-int get_next_val() {
-	if(tail == NULL) return 0;
-	else return tail->val + 1;
-}
-
 int main(int argc, char **argv) {
 
 	assert(argc == 2);
@@ -76,38 +68,66 @@ int main(int argc, char **argv) {
 
 	fpOut = fopen(outputFile, "wb");
 
-	// Build Initial Single Bytes Table
-	for(int i = 0; i < 256; i++)
-		add_entry((unsigned char *) &i);
+	assert(fpIn != NULL);
+	assert(fpOut != NULL);
 
-	// unsigned char *string = NULL;
-	// unsigned char *current = NULL;
-	// int strLen = 1;
-
- //  string = calloc(sizeof(*string), strLen); // 1
-	// current = calloc(sizeof(*current), 1); // 2
-
-	// fread(string, sizeof(*string), strLen, fpIn);
-
-	// fread(current, sizeof(*current), 1, fpIn);
-
-	// unsigned char *temp = calloc(sizeof(*temp), strLen + 1);
-
-	// // s + w
-	// for(int i = 0; i < strLen; i++) {
-	// 	temp[i] = string[i];
-	// }
-	// temp[strLen] = current[0];
-
-	// printf("%s\n", temp);
-
-	// if(lookup_entry(temp) == -1 /* 3 */ ) {
+	// Build Initial Single Byte Table (0 - 255)
+	for(int i = 0; i < 256; i++) {
+		unsigned char *temp = calloc(sizeof(*temp), 1);
+		memcpy(temp, (unsigned char *)&i, 1);
+		add_entry(temp);
+	}
 		
-	// 	int nxtVal = get_next_val();
-	// 	fwrite(&nxtVal, sizeof(nxtVal), 1, fpOut);
+	unsigned char *string = NULL;
+	unsigned char *current = NULL;
+	int strLen = 1;
+
+  string = calloc(sizeof(*string), strLen); // 1
+	current = calloc(sizeof(*current), 1); // 2
+
+	fread(string, sizeof(*string), strLen, fpIn);
+
+	int max;
+
+	while(fread(current, sizeof(*current), 1, fpIn) /* 8 */) {
+
+		unsigned char *temp = calloc(sizeof(*temp), strLen + 1);
+
+		// s + w
+		for(int i = 0; i < strLen; i++) {
+			temp[i] = string[i];
+		}
+		temp[strLen] = current[0];
+
+		if(lookup_entry(temp, strLen + 1) == -1 /* 3 */ ) {
 		
-	// 	add_entry(temp); // 5
-	// }
+			VAL_TYPE stringVal = lookup_entry(string, strLen);
+			fwrite(&stringVal, sizeof(stringVal), 1, fpOut); // 4
+
+			add_entry(temp); // 5
+
+			free(string);
+			string = current; // 6
+
+			strLen = 1;
+
+		} else {
+			strLen++;
+			
+			if(strLen > max) {
+				max = strLen;
+			} 
+
+			free(string);
+			string = temp; // 7
+		}
+
+		current = calloc(sizeof(*current), 1); // 2s
+	};
+
+
+	VAL_TYPE stringVal = lookup_entry(string, strLen);
+	fwrite(&stringVal, sizeof(stringVal), 1, fpOut); // 9
 
 	fclose(fpIn);
 	fclose(fpOut);
