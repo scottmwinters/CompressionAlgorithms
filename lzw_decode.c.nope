@@ -77,7 +77,7 @@ void print_string(unsigned char *str, int strLen) {
 
 	printf("\n");
 
-	// sleep(1);
+	sleep(1);
 }
 
 int main(int argc, char **argv) {
@@ -119,9 +119,9 @@ int main(int argc, char **argv) {
 	entry *currentEntry = NULL;
 	entry *previousEntry = NULL;
 
-	unsigned char *X = NULL;
-	unsigned char Y;
-	unsigned char Z;
+	unsigned char *string;
+	unsigned char character;
+	int strLen;
 
 	fread(&previous, sizeof(previous), 1, fpIn);
 	previousEntry = lookup_by_val(previous);
@@ -130,54 +130,34 @@ int main(int argc, char **argv) {
 	while(fread(&current, sizeof(current), 1, fpIn)) {
 
 		currentEntry = lookup_by_val(current);
-		printf("\ncurrent = %x\n", current);
-		printf("prevoius = %x\n", previous);
 
 		if(currentEntry == NULL /* Current Entry Doesn't Exist */ ) {
 
 			entry *previousEntry = lookup_by_val(previous);
 
-			unsigned char *X = calloc(sizeof(*X), previousEntry->strLen);
+			string = calloc(sizeof(*string), previousEntry->strLen+1);
+
 			for(int i = 0; i < previousEntry->strLen; i++)
-				X[i] = previousEntry->seq[i];
+				string[i] = previousEntry->seq[i];
 
-			Z = previousEntry->seq[0];
+			string[previousEntry->strLen] = character;
 
-			unsigned char *temp = calloc(sizeof(*temp), previousEntry->strLen + 1);
-			for(int i = 0; i < previousEntry->strLen; i++)
-				temp[i] = X[i];
-
-			temp[previousEntry->strLen] = Z;
-
-			printf("No | ");
-			print_string(temp, previousEntry->strLen + 1);
-			fwrite(temp, sizeof(*temp), previousEntry->strLen + 1, fpOut);
-
-			add_entry(temp, previousEntry->strLen + 1);
+			fwrite(string, sizeof(*string), previousEntry->strLen + 1, fpOut);
 
 		} else {
 
-			printf("Yes | ");
-			print_string(currentEntry->seq, currentEntry->strLen);
-			fwrite(currentEntry->seq, sizeof(*currentEntry->seq), currentEntry->strLen, fpOut);
+			string = calloc(sizeof(*string), currentEntry->strLen);
 
-			entry *previousEntry = lookup_by_val(previous);
+			for(int i = 0; i < currentEntry->strLen; i++)
+				string[i] = currentEntry->seq[i]; // 7
 
-			X = calloc(sizeof(*X), previousEntry->strLen);
-			for(int i = 0; i < previousEntry->strLen; i++)
-				X[i] = previousEntry->seq[i];
+			fwrite(string, sizeof(*string), currentEntry->strLen, fpOut);
 
-			Y = currentEntry->seq[0];
-
-			unsigned char *temp = calloc(sizeof(*temp), previousEntry->strLen + 1);
-
-			for(int i = 0; i < previousEntry->strLen; i++)
-				temp[i] = X[i];
-
-			temp[previousEntry->strLen] = Y;
-
-			add_entry(temp, previousEntry->strLen + 1);
 		}
+
+		character = string[0]; // 9
+
+		
 
 		previous = current;
 

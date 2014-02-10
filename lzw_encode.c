@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #define MAX_STRING_LENGTH 256
-#define VAL_TYPE int
+#define VAL_TYPE unsigned int
 
 typedef struct entry_tag {
 	unsigned char *seq;
@@ -87,8 +87,6 @@ int main(int argc, char **argv) {
 
 	fread(string, sizeof(*string), strLen, fpIn);
 
-	int max;
-
 	while(fread(current, sizeof(*current), 1, fpIn) /* 8 */) {
 
 		unsigned char *temp = calloc(sizeof(*temp), strLen + 1);
@@ -107,16 +105,16 @@ int main(int argc, char **argv) {
 			add_entry(temp); // 5
 
 			free(string);
-			string = current; // 6
+			string = NULL;
 
 			strLen = 1;
+			string = calloc(sizeof(*string), strLen);
+			string = current; // 6
+
 
 		} else {
-			strLen++;
 			
-			if(strLen > max) {
-				max = strLen;
-			} 
+			strLen++;
 
 			free(string);
 			string = temp; // 7
