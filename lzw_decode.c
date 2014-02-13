@@ -17,6 +17,30 @@ typedef struct entry_tag {
 entry *head = NULL;
 entry *tail = NULL;
 
+
+void print_list() {
+
+	entry *rover = head;
+
+	do {
+
+		printf("%d : ", rover->val);
+		for(int i = 0; i < rover->strLen; i++)
+			printf("%x", rover->seq[i]);
+
+		printf("\n");
+
+		rover = rover->fwd;
+	} while(rover != NULL);
+}
+
+void print_string(unsigned char *str, int strLen) {
+	for(int i = 0; i < strLen; i++)
+		printf("%x", str[i]);
+
+	printf("\n");
+}
+
 // NULL = Not Found
 entry *lookup_by_val(VAL_TYPE val) {
 
@@ -26,8 +50,8 @@ entry *lookup_by_val(VAL_TYPE val) {
 
 	do {
 		if(rover->val == val) return rover;
-		if(rover->fwd != NULL) rover = rover->fwd;
-	} while(rover->fwd != NULL);
+		rover = rover->fwd;
+	} while(rover != NULL);
 
 	return NULL;
 }
@@ -55,30 +79,6 @@ void add_entry(unsigned char *seq, int strLen) {
 	
 }
 
-void print_list() {
-
-	entry *rover = head;
-
-	do {
-
-		printf("%d : ", rover->val);
-		for(int i = 0; i < rover->strLen; i++)
-			printf("%x", rover->seq[i]);
-
-		printf("\n");
-
-		rover = rover->fwd;
-	} while(rover != NULL);
-}
-
-void print_string(unsigned char *str, int strLen) {
-	for(int i = 0; i < strLen; i++)
-		printf("%x", str[i]);
-
-	printf("\n");
-
-	// sleep(1);
-}
 
 int main(int argc, char **argv) {
 
@@ -107,7 +107,7 @@ int main(int argc, char **argv) {
 	assert(fpOut != NULL);
 
 	// Build Initial Single Byte Table (0 - 255)
-	for(int i = 0; i < 256; i++) {
+	for(unsigned int i = 0; i < 256; i++) {
 		unsigned char *temp = calloc(sizeof(*temp), 1);
 		memcpy(temp, (unsigned char *)&i, 1);
 		add_entry(temp, 1);
@@ -119,62 +119,37 @@ int main(int argc, char **argv) {
 	entry *currentEntry = NULL;
 	entry *previousEntry = NULL;
 
-	unsigned char *X = NULL;
-	unsigned char Y;
-	unsigned char Z;
+	fread(&current, sizeof(current), 1, fpIn);
+	currentEntry = lookup_by_val(current);
+	fwrite(currentEntry->seq, sizeof(*currentEntry->seq), currentEntry->strLen, fpOut);
 
-	fread(&previous, sizeof(previous), 1, fpIn);
-	previousEntry = lookup_by_val(previous);
-	fwrite(previousEntry->seq, sizeof(*previousEntry->seq), previousEntry->strLen, fpOut);
+	previous = current;
 
 	while(fread(&current, sizeof(current), 1, fpIn)) {
 
 		currentEntry = lookup_by_val(current);
-		printf("\ncurrent = %x\n", current);
-		printf("prevoius = %x\n", previous);
 
-		if(currentEntry == NULL /* Current Entry Doesn't Exist */ ) {
+		if(currentEntry == NULL) {
 
-			entry *previousEntry = lookup_by_val(previous);
-
-			unsigned char *X = calloc(sizeof(*X), previousEntry->strLen);
-			for(int i = 0; i < previousEntry->strLen; i++)
-				X[i] = previousEntry->seq[i];
-
-			Z = previousEntry->seq[0];
+			previousEntry = lookup_by_val(previous);
 
 			unsigned char *temp = calloc(sizeof(*temp), previousEntry->strLen + 1);
-			for(int i = 0; i < previousEntry->strLen; i++)
-				temp[i] = X[i];
+			memcpy(temp, previousEntry->seq, previousEntry->strLen);
+			temp[previousEntry->strLen] = previousEntry->seq[0];
 
-			temp[previousEntry->strLen] = Z;
-
-			printf("No | ");
-			print_string(temp, previousEntry->strLen + 1);
 			fwrite(temp, sizeof(*temp), previousEntry->strLen + 1, fpOut);
 
 			add_entry(temp, previousEntry->strLen + 1);
 
 		} else {
 
-			printf("Yes | ");
-			print_string(currentEntry->seq, currentEntry->strLen);
 			fwrite(currentEntry->seq, sizeof(*currentEntry->seq), currentEntry->strLen, fpOut);
 
-			entry *previousEntry = lookup_by_val(previous);
-
-			X = calloc(sizeof(*X), previousEntry->strLen);
-			for(int i = 0; i < previousEntry->strLen; i++)
-				X[i] = previousEntry->seq[i];
-
-			Y = currentEntry->seq[0];
+			previousEntry = lookup_by_val(previous);
 
 			unsigned char *temp = calloc(sizeof(*temp), previousEntry->strLen + 1);
-
-			for(int i = 0; i < previousEntry->strLen; i++)
-				temp[i] = X[i];
-
-			temp[previousEntry->strLen] = Y;
+			memcpy(temp, previousEntry->seq, previousEntry->strLen);
+			temp[previousEntry->strLen] = currentEntry->seq[0];
 
 			add_entry(temp, previousEntry->strLen + 1);
 		}
@@ -182,6 +157,8 @@ int main(int argc, char **argv) {
 		previous = current;
 
 	}
+
+	
 
 	fclose(fpIn);
 	fclose(fpOut);

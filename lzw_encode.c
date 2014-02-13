@@ -10,6 +10,7 @@
 typedef struct entry_tag {
 	unsigned char *seq;
 	VAL_TYPE val;
+	int strLen;
 	struct entry_tag *fwd;
 } entry;
 
@@ -24,19 +25,20 @@ VAL_TYPE lookup_entry(unsigned char *seq, int strLen) {
 	entry *rover = head;
 
 	do {
-		if(memcmp(rover->seq, seq, strLen) == 0) return rover->val;
-		if(rover->fwd != NULL) rover = rover->fwd;
-	} while(rover->fwd != NULL);
+		if(rover->strLen == strLen && memcmp(rover->seq, seq, strLen) == 0) return rover->val;
+		rover = rover->fwd;
+	} while(rover != NULL);
 
 	return -1;
 }
 
-void add_entry(unsigned char *seq) {
+void add_entry(unsigned char *seq, int strLen) {
 
 	entry *newEntry = calloc(sizeof(entry), 1);
 
 	newEntry->seq = seq;
 	newEntry->fwd = NULL;
+	newEntry->strLen = strLen;
 
 	if(head == NULL) {
 		newEntry->val = 0;
@@ -72,20 +74,20 @@ int main(int argc, char **argv) {
 	assert(fpOut != NULL);
 
 	// Build Initial Single Byte Table (0 - 255)
-	for(int i = 0; i < 256; i++) {
+	for(unsigned int i = 0; i < 256; i++) {
 		unsigned char *temp = calloc(sizeof(*temp), 1);
 		memcpy(temp, (unsigned char *)&i, 1);
-		add_entry(temp);
+		add_entry(temp, 1);
 	}
 		
-	unsigned char *string = NULL;
+	unsigned char *previous = NULL;
 	unsigned char *current = NULL;
 	int strLen = 1;
 
-  string = calloc(sizeof(*string), strLen); // 1
+  previous = calloc(sizeof(*previous), strLen); // 1
 	current = calloc(sizeof(*current), 1); // 2
 
-	fread(string, sizeof(*string), strLen, fpIn);
+	fread(previous, sizeof(*previous), strLen, fpIn);
 
 	while(fread(current, sizeof(*current), 1, fpIn) /* 8 */) {
 
@@ -93,38 +95,40 @@ int main(int argc, char **argv) {
 
 		// s + w
 		for(int i = 0; i < strLen; i++) {
-			temp[i] = string[i];
+			temp[i] = previous[i];
 		}
 		temp[strLen] = current[0];
 
+
 		if(lookup_entry(temp, strLen + 1) == -1 /* 3 */ ) {
-		
-			VAL_TYPE stringVal = lookup_entry(string, strLen);
+
+			VAL_TYPE stringVal = lookup_entry(previous, strLen);
 			fwrite(&stringVal, sizeof(stringVal), 1, fpOut); // 4
 
-			add_entry(temp); // 5
+			add_entry(temp, strLen + 1); // 5
 
-			free(string);
-			string = NULL;
+			free(previous);
+			previous = NULL;
 
 			strLen = 1;
-			string = calloc(sizeof(*string), strLen);
-			string = current; // 6
-
+			previous = calloc(sizeof(*previous), strLen);
+			*previous = *current; // 6
+			assert(previous[0] == current[0]);
 
 		} else {
 			
 			strLen++;
+			free(previous);
+			previous = temp; // 7
 
-			free(string);
-			string = temp; // 7
 		}
 
 		current = calloc(sizeof(*current), 1); // 2s
+		
 	};
 
 
-	VAL_TYPE stringVal = lookup_entry(string, strLen);
+	VAL_TYPE stringVal = lookup_entry(previous, strLen);
 	fwrite(&stringVal, sizeof(stringVal), 1, fpOut); // 9
 
 	fclose(fpIn);
