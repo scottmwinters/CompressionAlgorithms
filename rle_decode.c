@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	assert(fpOut != NULL);
 
 	unsigned char current = 0;
-	unsigned int counter = 0;
+	unsigned char counter = 0;
 
 	while(fread(&counter, sizeof(counter), 1, fpIn)) {
 		

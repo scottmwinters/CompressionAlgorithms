@@ -5,7 +5,7 @@
 #include <unistd.h>
 
 #define MAX_STRING_LENGTH 256
-#define VAL_TYPE unsigned int
+#define VAL_TYPE short int
 
 typedef struct entry_tag {
 	unsigned char *seq;
