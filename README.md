@@ -10,3 +10,16 @@ Simple Run to Test Functionality
 ```bash
 sh testScript.sh inputfile
 ```
+
+or
+
+```bash
+make
+
+./rleEncode inputfile
+./rleDecode inputfile.rle
+
+./lzwEncode inputfile
+./lzwDecode inputfile.lzw
+
+```
