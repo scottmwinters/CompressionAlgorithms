@@ -10,3 +10,9 @@ Simple Run to Test Functionality
 '''
 sh testScript.sh inputfile
 '''
+
+```
+function test() {
+  console.log("notice the blank line before this function?");
+}
+```
