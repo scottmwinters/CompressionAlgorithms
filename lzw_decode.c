@@ -21,9 +21,7 @@ entry *tail = NULL;
 void print_list() {
 
 	entry *rover = head;
-
 	do {
-
 		printf("%d : ", rover->val);
 		for(int i = 0; i < rover->strLen; i++)
 			printf("%x", rover->seq[i]);

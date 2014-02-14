@@ -31,7 +31,10 @@ int main(int argc, char **argv) {
 
 		if(current == previous) {
 			counter++;
-			if(counter == 4294967295) printf("Hit Limit");
+			if(counter == 4294967295) {
+				printf("Error: Going to overflow. Exiting\n");
+				exit(1);
+			} 
 		}
 		else {
 		  fwrite(&counter, sizeof(counter), 1, fpOut);
