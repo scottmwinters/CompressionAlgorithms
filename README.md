@@ -7,6 +7,6 @@ For this assignement I implemented the encoding and decoding algorithms for both
 
 Simple Run to Test Functionality
 
-''''bash
+'''
 sh testScript.sh inputfile
-''''
+'''
